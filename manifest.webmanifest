@@ -1,0 +1,17 @@
+{
+  "name": "日本一周！都道府県せいはの旅",
+  "short_name": "都道府県パズル",
+  "description": "都道府県を形パズルで覚える4年生向け学習ゲーム。日本一周クエスト・陣取りバトル・ご当地お宝。",
+  "lang": "ja",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "landscape",
+  "background_color": "#eef3fb",
+  "theme_color": "#2f6df0",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

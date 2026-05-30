@@ -1,5 +1,5 @@
 /* 都道府県パズル service worker — オフライン用キャッシュ */
-const CACHE = 'todofuken-v2';
+const CACHE = 'todofuken-v4';
 const CORE = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './icon-512-maskable.png', './apple-touch-icon.png'];
 
 self.addEventListener('install', function (e) {
@@ -17,6 +17,15 @@ self.addEventListener('activate', function (e) {
 
 self.addEventListener('fetch', function (e) {
   if (e.request.method !== 'GET') return;
+  const wantsHtml = e.request.mode === 'navigate' || (e.request.headers.get('accept') || '').includes('text/html');
+  if (wantsHtml) {
+    e.respondWith(
+      fetch(e.request).then(function (res) {
+        return caches.open(CACHE).then(function (c) { c.put(e.request, res.clone()); return res; });
+      }).catch(function () { return caches.match(e.request).then(function (hit) { return hit || caches.match('./index.html'); }); })
+    );
+    return;
+  }
   e.respondWith(
     caches.match(e.request).then(function (hit) {
       return hit || fetch(e.request).then(function (res) {

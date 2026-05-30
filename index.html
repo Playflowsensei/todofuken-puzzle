@@ -30,11 +30,14 @@
   #stage{flex:1;position:relative;display:flex;align-items:center;justify-content:center;padding:8px;}
   #boardWrap{position:relative;width:100%;height:100%;}
   svg#board{width:100%;height:100%;touch-action:none;}
-  #board .prefecture{fill:#e7edf7;stroke:#b7c3d8;stroke-width:1;transition:fill .2s;}
-  #board .prefecture.done{stroke:#74839d;}
+  #board .prefecture{fill:#e7edf7;stroke:#b7c3d8;stroke-width:1;transition:fill .2s,stroke .2s,stroke-width .2s,filter .2s;}
+  #board .prefecture.done{stroke:#74839d;animation:prefDonePop .42s cubic-bezier(.18,.8,.24,1.18);}
   #board .prefecture.hot{fill:#cfe0ff !important;}
+  #board .prefecture.magnet{fill:#d9fbe9 !important;stroke:#10b981;stroke-width:2.6;filter:drop-shadow(0 0 8px rgba(16,185,129,.55));animation:magnetPulse .55s ease-in-out infinite alternate;}
   #board .prefecture.hint{fill:#fff3cf !important;animation:pulse 1.1s ease-in-out infinite;}
   @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.55;}}
+  @keyframes magnetPulse{0%{filter:drop-shadow(0 0 4px rgba(16,185,129,.35));}100%{filter:drop-shadow(0 0 12px rgba(16,185,129,.75));}}
+  @keyframes prefDonePop{0%{filter:brightness(1);stroke-width:1;}45%{filter:brightness(1.22);stroke-width:3;}100%{filter:brightness(1);stroke-width:1.4;}}
   #board .pref-label{font-weight:800;fill:#1c2840;pointer-events:none;text-anchor:middle;paint-order:stroke;stroke:#fff;stroke-width:2.6px;stroke-linejoin:round;}
   #board.regionfocus .prefecture{opacity:.16;}
   #board.regionfocus .prefecture.active{opacity:1;}
@@ -66,6 +69,7 @@
   .piece .pfuri{font-weight:700;fill:#2c7a52;text-anchor:middle;paint-order:stroke;stroke:#fff;stroke-width:2.4px;stroke-linejoin:round;}
   .piece.dragging{opacity:.35;}
   .ghost{position:fixed;z-index:60;pointer-events:none;transform:translate(-50%,-50%);box-shadow:0 8px 20px rgba(20,40,80,.25);}
+  .ghost.magnetized{transition:left .12s ease-out,top .12s ease-out,transform .12s ease-out;transform:translate(-50%,-50%) scale(.95);box-shadow:0 8px 24px rgba(16,185,129,.42),0 0 0 5px rgba(16,185,129,.16);}
 
   .overlay{position:absolute;inset:0;background:rgba(238,243,251,.97);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center;z-index:80;padding:16px;overflow-y:auto;}
   .overlay.hide{display:none;}
@@ -81,18 +85,24 @@
   .regiongrid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:8px;}
   .toast{position:absolute;top:12px;left:50%;transform:translateX(-50%);background:#1f2a3d;color:#fff;padding:8px 16px;border-radius:20px;font-weight:700;font-size:14px;opacity:0;transition:.18s;z-index:90;pointer-events:none;white-space:nowrap;}
   .toast.show{opacity:1;}
-  .treasure{position:absolute;left:50%;bottom:16px;transform:translateX(-50%) translateY(20px);background:#fff;border:2px solid var(--gold);border-radius:16px;padding:9px 16px;box-shadow:0 8px 24px rgba(20,40,80,.18);opacity:0;transition:.25s;z-index:88;max-width:84%;text-align:center;}
-  .treasure.show{opacity:1;transform:translateX(-50%) translateY(0);}
-  .treasure .titem{font-size:20px;}
-  .treasure .tname{font-weight:800;font-size:15px;}
-  .treasure .ttrivia{font-size:12.5px;color:#5b6b85;}
+  .treasure{position:absolute;left:50%;bottom:16px;transform:translateX(-50%) translateY(20px) scale(.96);background:#fff;border:2px solid var(--gold);border-radius:16px;padding:9px 16px;box-shadow:0 8px 24px rgba(20,40,80,.18);opacity:0;transition:.25s;z-index:88;max-width:84%;text-align:center;}
+  .treasure.show{opacity:1;transform:translateX(-50%) translateY(0) scale(1);animation:treasurePop .48s cubic-bezier(.18,.8,.24,1.22);}
+  .treasure .titem{font-size:34px;line-height:1;}
+  .treasure .tname{font-weight:900;font-size:16px;}
+  .treasure .cname{font-weight:900;font-size:18px;color:#2f6df0;margin-top:2px;}
+  .treasure .ctag{font-size:12.5px;color:#7a4d00;background:#fff4cf;border-radius:999px;padding:2px 9px;display:inline-block;margin-top:4px;}
+  .treasure .ttrivia{font-size:12.5px;color:#5b6b85;margin-top:5px;}
   .combo{position:absolute;top:40%;left:50%;transform:translate(-50%,-50%);font-weight:900;font-size:34px;color:var(--gold);text-shadow:0 2px 0 #fff,0 0 14px rgba(244,180,0,.6);opacity:0;pointer-events:none;z-index:92;}
   .combo.pop{animation:comboPop .9s ease-out;}
   @keyframes comboPop{0%{opacity:0;transform:translate(-50%,-50%) scale(.5);}25%{opacity:1;transform:translate(-50%,-50%) scale(1.15);}70%{opacity:1;transform:translate(-50%,-62%) scale(1);}100%{opacity:0;transform:translate(-50%,-82%) scale(1);}}
   .confetti{position:absolute;width:9px;height:13px;z-index:91;pointer-events:none;border-radius:2px;}
+  .snap-ring{position:absolute;z-index:90;width:22px;height:22px;border:3px solid #10b981;border-radius:50%;pointer-events:none;transform:translate(-50%,-50%) scale(.35);opacity:.9;box-shadow:0 0 0 6px rgba(16,185,129,.16);}
+  .snap-ring.go{animation:snapRing .48s ease-out forwards;}
+  @keyframes snapRing{0%{opacity:.9;transform:translate(-50%,-50%) scale(.35);}75%{opacity:.8;}100%{opacity:0;transform:translate(-50%,-50%) scale(2.7);}}
   .stamp{position:absolute;z-index:93;font-size:34px;pointer-events:none;transform:translate(-50%,-50%) scale(.3);opacity:0;}
   .stamp.go{animation:stampPop .7s ease-out;}
   @keyframes stampPop{0%{opacity:0;transform:translate(-50%,-50%) scale(.3) rotate(-18deg);}30%{opacity:1;transform:translate(-50%,-50%) scale(1.2) rotate(-8deg);}100%{opacity:0;transform:translate(-50%,-90%) scale(1) rotate(0);}}
+  @keyframes treasurePop{0%{transform:translateX(-50%) translateY(18px) scale(.9);}58%{transform:translateX(-50%) translateY(-4px) scale(1.06);}100%{transform:translateX(-50%) translateY(0) scale(1);}}
   footer{position:absolute;bottom:4px;left:8px;font-size:10px;color:#9aa6bd;}
   @media (max-width:720px){#side{width:184px;min-width:184px;}.piece svg{width:64px;height:54px;}.zchip{width:30px;height:30px;font-size:15px;}}
 </style>
@@ -338,7 +348,7 @@
   <div id="side">
     <div id="hud"></div>
     <div id="zukan">
-      <div class="zt"><span>💎 ずかん</span><span id="zcount">0 / 47</span></div>
+      <div class="zt"><span>🎴 キャラずかん</span><span id="zcount">0 / 47</span></div>
       <div id="zgrid"></div>
     </div>
     <div id="trayTitle">ピース（ドラッグして置く）</div>
@@ -352,7 +362,8 @@ const FURI={hokkaido:["北海道","ほっかいどう"],aomori:["青森県","あ
 const REGION={hokkaido:"北海道",tohoku:"東北",kanto:"関東",chubu:"中部",kinki:"近畿",chugoku:"中国",shikoku:"四国","kyushu-okinawa":"九州・沖縄"};
 const REGION_ORDER=["北海道","東北","関東","中部","近畿","中国","四国","九州・沖縄"];
 const ADJ={hokkaido:[],aomori:["iwate","akita"],iwate:["aomori","akita","miyagi"],miyagi:["iwate","akita","yamagata","fukushima"],akita:["aomori","iwate","miyagi","yamagata"],yamagata:["akita","miyagi","fukushima","niigata"],fukushima:["miyagi","yamagata","niigata","gunma","tochigi","ibaraki"],ibaraki:["fukushima","tochigi","saitama","chiba"],tochigi:["fukushima","ibaraki","gunma","saitama"],gunma:["fukushima","tochigi","saitama","nagano","niigata"],saitama:["gunma","tochigi","ibaraki","chiba","tokyo","yamanashi","nagano"],chiba:["ibaraki","saitama","tokyo"],tokyo:["saitama","chiba","kanagawa","yamanashi"],kanagawa:["tokyo","yamanashi","shizuoka"],niigata:["yamagata","fukushima","gunma","nagano","toyama"],toyama:["niigata","nagano","gifu","ishikawa"],ishikawa:["toyama","gifu","fukui"],fukui:["ishikawa","gifu","shiga","kyoto"],yamanashi:["saitama","tokyo","kanagawa","shizuoka","nagano"],nagano:["niigata","gunma","saitama","yamanashi","shizuoka","aichi","gifu","toyama"],gifu:["toyama","ishikawa","fukui","nagano","aichi","mie","shiga"],shizuoka:["kanagawa","yamanashi","nagano","aichi"],aichi:["nagano","gifu","mie","shizuoka"],mie:["gifu","aichi","shiga","kyoto","nara","wakayama"],shiga:["fukui","gifu","mie","kyoto"],kyoto:["fukui","shiga","mie","nara","osaka","hyogo"],osaka:["kyoto","nara","wakayama","hyogo"],hyogo:["kyoto","osaka","tottori","okayama"],nara:["kyoto","mie","osaka","wakayama"],wakayama:["mie","nara","osaka"],tottori:["hyogo","okayama","shimane"],shimane:["tottori","hiroshima","yamaguchi"],okayama:["hyogo","tottori","hiroshima"],hiroshima:["shimane","okayama","yamaguchi"],yamaguchi:["shimane","hiroshima"],tokushima:["kagawa","ehime","kochi"],kagawa:["tokushima","ehime"],ehime:["kagawa","tokushima","kochi"],kochi:["tokushima","ehime"],fukuoka:["saga","oita","kumamoto"],saga:["fukuoka","nagasaki"],nagasaki:["saga"],kumamoto:["fukuoka","oita","miyazaki","kagoshima"],oita:["fukuoka","kumamoto","miyazaki"],miyazaki:["kumamoto","oita","kagoshima"],kagoshima:["kumamoto","miyazaki"],okinawa:[]};
-const HOZAI={hokkaido:["🥔","じゃがいも・牛乳","日本一広い。面積は全国の約2割。"],aomori:["🍎","りんご","りんごの生産が日本一。"],iwate:["🍜","わんこそば","本州でいちばん広い県。"],miyagi:["🐟","ぎゅうたん・笹かまぼこ","東北の中心都市・仙台がある。"],akita:["🐕","きりたんぽ・あきた犬","「なまはげ」で有名。"],yamagata:["🍒","さくらんぼ","さくらんぼの生産が日本一。"],fukushima:["🍑","もも","東北でいちばん南の県。"],ibaraki:["🫘","なっとう","なっとうで有名。"],tochigi:["🍓","いちご","いちごの生産が日本一。日光がある。"],gunma:["🥬","こんにゃく・キャベツ","海に面していない内陸の県。"],saitama:["🌿","ねぎ・さといも","東京の北どなり。"],chiba:["🥜","らっかせい・しょうゆ","成田空港やディズニーがある。"],tokyo:["🗼","東京タワー・スカイツリー","日本の首都。人口が日本一。"],kanagawa:["🚢","横浜・中華街","港町・横浜がある。"],niigata:["🍚","こめ（コシヒカリ）","米の産地で雪が多い。"],toyama:["💊","くすり・ほたるいか","「くすりの富山」で有名。"],ishikawa:["🎨","金ぱく・輪島ぬり","金ぱくの生産が日本一。"],fukui:["🦕","きょうりゅう・めがね","めがねづくりときょうりゅう博物館。"],yamanashi:["🍇","ぶどう・もも","ぶどう・ももが日本一。富士山がある。"],nagano:["🍎","りんご・そば","海に面していない山の多い県。"],gifu:["🏠","白川郷","海に面していない内陸の県。"],shizuoka:["🍵","お茶","お茶の生産が日本一。富士山がある。"],aichi:["🚗","自動車","自動車づくりがさかん。名古屋がある。"],mie:["🦐","いせえび・しんじゅ","しんじゅの養しょくで有名。"],shiga:["🌊","びわ湖","日本一大きい湖「びわ湖」がある。"],kyoto:["⛩","お寺・神社","昔の都。古い建物が多い。"],osaka:["🐙","たこやき","西日本の中心都市。"],hyogo:["🐄","こうべ牛","明石海きょう大橋がある。"],nara:["🦌","しか・大ぶつ","しかと大ぶつで有名。昔の都。"],wakayama:["🍊","みかん・うめ","うめの生産が日本一。"],tottori:["🏜","とっとり砂きゅう","人口が日本一少ない。"],shimane:["⛩","出雲大社","出雲大社で有名。"],okayama:["🍑","ももたろう・きびだんご","「ももたろう」のお話で有名。"],hiroshima:["🦪","かき・もみじまんじゅう","かきの養しょくが日本一。"],yamaguchi:["🐡","ふぐ","本州のいちばん西。ふぐ料理。"],tokushima:["💃","阿波おどり","「阿波おどり」で有名。"],kagawa:["🍜","さぬきうどん","日本でいちばん面積が小さい県。"],ehime:["🍊","みかん","みかんづくりがさかん。"],kochi:["🐟","かつお","かつおりょうで有名。"],fukuoka:["🍜","とんこつ・めんたいこ","九州の中心都市・福岡がある。"],saga:["🍵","有田焼","焼き物（有田焼）で有名。"],nagasaki:["🍜","ちゃんぽん","島がとても多い。"],kumamoto:["🐻","くまモン・すいか","「くまモン」で有名。"],oita:["♨️","おんせん","おんせんの数が日本一。"],miyazaki:["🥭","マンゴー・チキン南ばん","マンゴーで有名。"],kagoshima:["🌋","さくらじま・さつまいも","火山「さくらじま」がある。"],okinawa:["🌺","ゴーヤー・シーサー","日本のいちばん南。あたたかい島。"]};
+const HOZAI={hokkaido:["🥔","じゃがいも・牛乳","日本一広い。面積は全国の約2割。"],aomori:["🍎","りんご","りんごの生産が日本一。"],iwate:["🍜","わんこそば","本州でいちばん広い県。"],miyagi:["🐟","ぎゅうたん・笹かまぼこ","東北の中心都市・仙台がある。"],akita:["🐕","きりたんぽ・あきた犬","「なまはげ」で有名。"],yamagata:["🍒","さくらんぼ","さくらんぼの生産が日本一。"],fukushima:["🍑","もも","東北でいちばん南の県。"],ibaraki:["🫘","なっとう","なっとうで有名。"],tochigi:["🍓","いちご","いちごの生産が日本一。日光がある。"],gunma:["🥬","こんにゃく・キャベツ","海に面していない内陸の県。"],saitama:["🌿","ねぎ・さといも","東京の北どなり。"],chiba:["🥜","らっかせい・しょうゆ","成田空港やディズニーがある。"],tokyo:["🗼","東京タワー・スカイツリー","日本の首都。人口が日本一。"],kanagawa:["🚢","横浜・中華街","港町・横浜がある。"],niigata:["🍚","こめ（コシヒカリ）","米の産地で雪が多い。"],toyama:["💊","くすり・ほたるいか","「くすりの富山」で有名。"],ishikawa:["🎨","金ぱく・輪島ぬり","金ぱくの生産が日本一。"],fukui:["🦕","きょうりゅう・めがね","めがねづくりときょうりゅう博物館。"],yamanashi:["🍇","ぶどう・もも","ぶどう・ももが日本一。富士山がある。"],nagano:["🍎","りんご・そば","海に面していない山の多い県。"],gifu:["🏠","白川郷","海に面していない内陸の県。"],shizuoka:["🍵","お茶","お茶の生産が日本一。富士山がある。"],aichi:["🚗","自動車","自動車づくりがさかん。名古屋がある。"],mie:["🦐","いせえび・しんじゅ","しんじゅの養しょくで有名。"],shiga:["🌊","びわ湖","日本一大きい湖「びわ湖」がある。"],kyoto:["⛩","お寺・神社","昔の都。古い建物が多い。"],osaka:["🐙","たこやき","西日本の中心都市。"],hyogo:["🐄","こうべ牛","明石海きょう大橋がある。"],nara:["🦌","しか・大ぶつ","しかと大ぶつで有名。昔の都。"],wakayama:["🍊","みかん・うめ","うめの生産が日本一。"],tottori:["🏜","とっとり砂きゅう","人口が日本一少ない。"],shimane:["⛩","出雲大社","出雲大社で有名。"],okayama:["🍑","ももたろう・きびだんご","「ももたろう」のお話で有名。"],hiroshima:["🦪","かき・もみじまんじゅう","かきの養しょくが日本一。"],yamaguchi:["🐡","ふぐ","本州のいちばん西。ふぐ料理。"],tokushima:["💃","阿波おどり","「阿波おどり」で有名。"],kagawa:["🍜","さぬきうどん","日本でいちばん面積が小さい県。"],ehime:["🍊","みかん","みかんづくりがさかん。"],kochi:["🐟","かつお","かつおりょうで有名。"],fukuoka:["🍜","とんこつ・めんたいこ","九州の中心都市・福岡がある。"],saga:["🍵","有田焼","焼き物（有田焼）で有名。"],nagasaki:["🍜","ちゃんぽん","島がとても多い。"],kumamoto:["🍉","すいか・水のめぐみ","名水や農産物で有名。"],oita:["♨️","おんせん","おんせんの数が日本一。"],miyazaki:["🥭","マンゴー・チキン南ばん","マンゴーで有名。"],kagoshima:["🌋","さくらじま・さつまいも","火山「さくらじま」がある。"],okinawa:["🌺","ゴーヤー・シーサー","日本のいちばん南。あたたかい島。"]};
+const CHARA={hokkaido:["🥔","ポテまる","じゃがいも畑の旅人"],aomori:["🍎","りんごん","赤いほっぺの案内役"],iwate:["🍜","わんこどん","おかわり大好き"],miyagi:["🐟","ささかま船長","港町のものしり"],akita:["🌾","きりたんぽん","雪国のあったか隊長"],yamagata:["🍒","チェリリン","さくらんぼの名人"],fukushima:["🍑","ももぴか","桃色スマイル"],ibaraki:["🫘","ねばまる","ねばって正解を探す"],tochigi:["🍓","いちごろう","日光も好きないちご侍"],gunma:["🥬","こんキャベ","山の風に強い"],saitama:["🌿","ねぎたろう","東京の北から応援"],chiba:["🥜","ピーナッツくん","半島を走る元気者"],tokyo:["🗼","タワリン","首都の道案内"],kanagawa:["🚢","ハマポート","港から手をふる"],niigata:["🍚","こめまる","雪国のおにぎり職人"],toyama:["💊","くすりん","立山の見守り係"],ishikawa:["✨","きんぱくん","金色にきらめく"],fukui:["🦕","ザウルン","恐竜博士"],yamanashi:["🍇","ぶどうふじ","富士山を見上げる"],nagano:["🍎","そばりん","山道に強い"],gifu:["🏠","しらかわん","合掌造りの番人"],shizuoka:["🍵","ちゃっぱ丸","富士山とお茶が好き"],aichi:["🚗","くるまる","ものづくりレーサー"],mie:["🦐","いせえびん","海のきらきら王子"],shiga:["🌊","びわこっこ","湖の見習い船長"],kyoto:["⛩","みやこまる","古都の案内人"],osaka:["🐙","たこやん","ツッコミ上手"],hyogo:["🌉","はしわたる","海峡をこえる"],nara:["🦌","しかぽん","大仏さまの友だち"],wakayama:["🍊","うめみかん","山と海の元気っ子"],tottori:["🏜","すなっぴ","砂丘をころころ"],shimane:["⛩","いずもん","神話の語り部"],okayama:["🍑","ももきび","きびだんごの配達係"],hiroshima:["🦪","かきまる","海のうまみ担当"],yamaguchi:["🐡","ふくふく","本州西の見張り番"],tokushima:["💃","おどりん","リズムで案内"],kagawa:["🍜","うどんこ","小さな県の大スター"],ehime:["🍊","みかぼう","太陽色の応援団"],kochi:["🐟","かつお丸","黒潮ダッシュ"],fukuoka:["🍜","とんこっち","九州の元気印"],saga:["🍵","ありたん","焼き物の絵付け係"],nagasaki:["🍜","ちゃんぽんた","島めぐり名人"],kumamoto:["🍉","すいかベア","水の国の力持ち"],oita:["♨️","ゆけむりん","温泉ぽかぽか"],miyazaki:["🥭","マンゴロー","南国ジャンパー"],kagoshima:["🌋","さくらじマン","火山パワー"],okinawa:["🌺","シーサン","南の島の守り役"]};
 const DIFF={easy:{stars:1,name:true,furi:true,hint:true,label:"やさしい"},normal:{stars:2,name:true,furi:false,hint:false,label:"ふつう"},hard:{stars:3,name:false,furi:false,hint:false,label:"むずかしい"}};
 
 /* ===== 盤面抽出 ===== */
@@ -406,25 +417,47 @@ function makePieceSVG(p){
 function buildTray(){tray.innerHTML='';state.queue.forEach(p=>{const el=document.createElement('div');el.className='piece'+(state.difficulty==='hard'?' hardpiece':'');el.dataset.romaji=p.romaji;el.appendChild(makePieceSVG(p));tray.appendChild(el);attachDrag(el,p);});}
 
 /* ===== ドラッグ＆ドロップ ===== */
-let ghost=null,dragP=null,dragEl=null,hotEl=null;
+let ghost=null,dragP=null,dragEl=null,hotEl=null,magnetEl=null;
 function attachDrag(el,p){
   el.addEventListener('pointerdown',e=>{if(!state.running)return;e.preventDefault();dragP=p;dragEl=el;el.classList.add('dragging');ghost=el.cloneNode(true);ghost.classList.add('ghost');ghost.classList.remove('dragging');ghost.style.width=el.offsetWidth+'px';document.body.appendChild(ghost);moveGhost(e.clientX,e.clientY);if(DIFF[state.difficulty].hint){p.g.classList.add('hint');}el.setPointerCapture(e.pointerId);});
-  el.addEventListener('pointermove',e=>{if(dragP===p){e.preventDefault();moveGhost(e.clientX,e.clientY);hotTarget(e.clientX,e.clientY);}});
+  el.addEventListener('pointermove',e=>{if(dragP===p){e.preventDefault();magneticMove(e.clientX,e.clientY);hotTarget(e.clientX,e.clientY);}});
   el.addEventListener('pointerup',e=>{if(dragP===p)drop(e.clientX,e.clientY);});
   el.addEventListener('pointercancel',()=>{if(dragP===p)cleanupDrag();});
 }
 function moveGhost(x,y){if(ghost){ghost.style.left=x+'px';ghost.style.top=y+'px';}}
 function nearestTarget(x,y){let b=null,bd=1e9;state.queue.forEach(p=>{const r=p.g.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2,d=(cx-x)**2+(cy-y)**2;if(d<bd){bd=d;b=p;}});return{p:b,d2:bd};}
+function targetCenter(p){const r=p.g.getBoundingClientRect();return{x:r.left+r.width/2,y:r.top+r.height/2};}
+function setMagnet(p){
+  const next=p?p.g:null;
+  if(magnetEl&&magnetEl!==next)magnetEl.classList.remove('magnet');
+  magnetEl=next;
+  if(magnetEl)magnetEl.classList.add('magnet');
+  if(ghost)ghost.classList.toggle('magnetized',!!magnetEl);
+}
+function magneticMove(x,y){
+  if(!ghost||!dragP){moveGhost(x,y);return;}
+  const br=board.getBoundingClientRect(),inside=x>=br.left&&x<=br.right&&y>=br.top&&y<=br.bottom;
+  const{p:near,d2}=nearestTarget(x,y),r=dragP.g.getBoundingClientRect(),tol=Math.max(r.width,r.height,48),dist=Math.sqrt(d2);
+  if(inside&&near===dragP&&dist<tol*1.75){
+    const c=targetCenter(dragP),pull=Math.min(.74,Math.max(.24,1-dist/(tol*1.75)));
+    moveGhost(x+(c.x-x)*pull,y+(c.y-y)*pull);
+    setMagnet(dragP);
+  }else{
+    moveGhost(x,y);
+    setMagnet(null);
+  }
+}
 function hotTarget(x,y){const{p}=nearestTarget(x,y);if(hotEl&&hotEl!==(p&&p.g))hotEl.classList.remove('hot');if(p){p.g.classList.add('hot');hotEl=p.g;}}
-function drop(x,y){const br=board.getBoundingClientRect(),inside=x>=br.left&&x<=br.right&&y>=br.top&&y<=br.bottom;const{p:near,d2}=nearestTarget(x,y),r=dragP.g.getBoundingClientRect(),tol=Math.max(r.width,r.height,48);if(inside&&near===dragP&&Math.sqrt(d2)<tol*1.3)placeCorrect(dragP,x,y);else placeWrong(dragP,(inside&&near&&near!==dragP)?near:null);cleanupDrag();}
-function cleanupDrag(){if(ghost){ghost.remove();ghost=null;}if(dragEl)dragEl.classList.remove('dragging');if(hotEl){hotEl.classList.remove('hot');hotEl=null;}board.querySelectorAll('.hint').forEach(g=>g.classList.remove('hint'));dragP=null;dragEl=null;}
+function snapRing(x,y){const br=boardWrap.getBoundingClientRect(),ring=document.createElement('div');ring.className='snap-ring';ring.style.left=(x-br.left)+'px';ring.style.top=(y-br.top)+'px';boardWrap.appendChild(ring);requestAnimationFrame(()=>ring.classList.add('go'));setTimeout(()=>ring.remove(),520);}
+function drop(x,y){const br=board.getBoundingClientRect(),inside=x>=br.left&&x<=br.right&&y>=br.top&&y<=br.bottom;const{p:near,d2}=nearestTarget(x,y),r=dragP.g.getBoundingClientRect(),tol=Math.max(r.width,r.height,48),ok=inside&&near===dragP&&Math.sqrt(d2)<tol*1.38;if(ok){const c=targetCenter(dragP);moveGhost(c.x,c.y);placeCorrect(dragP,c.x,c.y);}else placeWrong(dragP,(inside&&near&&near!==dragP)?near:null);cleanupDrag();}
+function cleanupDrag(){setMagnet(null);if(ghost){ghost.remove();ghost=null;}if(dragEl)dragEl.classList.remove('dragging');if(hotEl){hotEl.classList.remove('hot');hotEl=null;}board.querySelectorAll('.hint').forEach(g=>g.classList.remove('hint'));dragP=null;dragEl=null;}
 
 /* ===== 正誤 ===== */
 function placeCorrect(p,x,y){
   const teamColor=state.mode==='group'?state.teams[state.turn].color:'#bfe3c8';
   p.g.classList.add('done');p.g.style.fill=teamColor;p.g.style.opacity=1;addBoardLabel(p);
   sOK();vib(40);
-  if(x!=null){confettiBurst(x,y);stampAt(x,y,'⭕');}
+  if(x!=null){snapRing(x,y);confettiBurst(x,y,26);stampAt(x,y,'⭕');}
   const el=tray.querySelector(`.piece[data-romaji="${p.romaji}"]`);if(el)el.remove();
   state.queue=state.queue.filter(q=>q!==p);state.placed++;
   // マスター度＆お宝
@@ -450,10 +483,11 @@ function renderZukan(){
   const grid=document.getElementById('zgrid');grid.innerHTML='';
   PREFS.slice().sort((a,b)=>REGION_ORDER.indexOf(a.region)-REGION_ORDER.indexOf(b.region)).forEach(p=>{
     const got=COLLECTED.has(p.romaji),h=HOZAI[p.romaji],st=stars(p.romaji);
-    const c=document.createElement('div');c.className='zchip'+(got?' got':'');c.textContent=got?h[0]:'❓';
+    const ch=CHARA[p.romaji]||h;
+    const c=document.createElement('div');c.className='zchip'+(got?' got':'');c.textContent=got?ch[0]:'❓';
     if(got&&st>0){const s=document.createElement('span');s.className='st';s.textContent='★'.repeat(st);c.appendChild(s);}
-    c.title=got?`${p.kanji}：${h[1]}`:'？？？';
-    c.onclick=()=>{ if(got) flashToast(`${h[0]} ${p.kanji}　${h[2]}`, '#1f2a3d'); };
+    c.title=got?`${p.kanji}：${ch[1]}（${h[1]}）`:'？？？';
+    c.onclick=()=>{ if(got) flashToast(`${ch[0]} ${ch[1]}｜${p.kanji}　${ch[2]}`, '#1f2a3d'); };
     grid.appendChild(c);
   });
   document.getElementById('zcount').textContent=`${COLLECTED.size} / 47`;
@@ -461,7 +495,7 @@ function renderZukan(){
 function updateMasterPill(){document.getElementById('masterPill').textContent=`⭐ ${totalStars()} / 141`;}
 
 /* ===== ポップ ===== */
-let trsT=null;function showTreasure(p){const h=HOZAI[p.romaji];if(!h)return;treasureEl.innerHTML=`<div class="titem">${h[0]}</div><div class="tname">${p.kanji}　${h[1]}</div><div class="ttrivia">${h[2]}</div>`;treasureEl.classList.add('show');clearTimeout(trsT);trsT=setTimeout(()=>treasureEl.classList.remove('show'),2200);}
+let trsT=null;function showTreasure(p){const h=HOZAI[p.romaji],ch=CHARA[p.romaji]||h;if(!h)return;treasureEl.innerHTML=`<div class="titem">${ch[0]}</div><div class="tname">${p.kanji} キャラカード</div><div class="cname">${ch[1]}</div><div class="ctag">${ch[2]}</div><div class="ttrivia">${h[1]}：${h[2]}</div>`;treasureEl.classList.add('show');clearTimeout(trsT);trsT=setTimeout(()=>treasureEl.classList.remove('show'),2600);}
 function showCombo(n){comboEl.textContent=`となりどうし！コンボ×${n}`;comboEl.classList.remove('pop');void comboEl.offsetWidth;comboEl.classList.add('pop');}
 let toastT=null;function flashToast(m,c){toastEl.textContent=m;toastEl.style.background=c||'#1f2a3d';toastEl.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>toastEl.classList.remove('show'),1100);}
 
@@ -476,13 +510,13 @@ function renderHUD(){
     const stageTxt=state.quest?`${state.questIdx+1}/${REGION_ORDER.length}（${REGION_ORDER[state.questIdx]}）`:(state.region==='all'?'全国':state.region);
     hud.innerHTML=`<div class="hudrow"><span>難易度</span><b>${DIFF[state.difficulty].label}</b></div>
       <div class="hudrow"><span>🗾 地方</span><b>${stageTxt}</b></div>
-      <div class="hudrow"><span>⏱ タイム</span><b id="hTime">${fmt(Math.floor((Date.now()-state.t0)/1000))}</b></div>
+      <div class="hudrow"><span>⏱ タイム</span><b id="hTime">${state.running?fmt(Math.floor((Date.now()-state.t0)/1000)):'0:00'}</b></div>
       <div class="hudrow"><span>✅ 正解</span><b>${state.placed} / ${state.total}</b></div>
       <div class="hudrow"><span>🔥 コンボ</span><b>${state.combo>1?'×'+state.combo:'―'}</b></div>
       <div class="bar"><i style="width:${state.total?state.placed/state.total*100:0}%"></i></div>`;
   }else{
     hud.innerHTML=`<div class="hudrow"><span>難易度</span><b>${DIFF[state.difficulty].label}</b></div>
-      <div class="hudrow"><span>⏱ タイム</span><b id="hTime">${fmt(Math.floor((Date.now()-state.t0)/1000))}</b></div>
+      <div class="hudrow"><span>⏱ タイム</span><b id="hTime">${state.running?fmt(Math.floor((Date.now()-state.t0)/1000)):'0:00'}</b></div>
       <div class="hudrow"><span>✅ おいた</span><b>${state.placed} / ${state.total}</b></div>
       <div class="bar"><i style="width:${state.total?state.placed/state.total*100:0}%"></i></div><div id="teams"></div>`;
     const box=hud.querySelector('#teams');state.teams.forEach((t,i)=>{const c=document.createElement('div');c.className='teamchip'+(i===state.turn?' turn':'');c.style.color=t.color;c.style.background=t.color+'22';c.style.borderColor=t.color;c.innerHTML=`${t.name}<br><b>${state.teamScores[i]}</b>`;box.appendChild(c);});

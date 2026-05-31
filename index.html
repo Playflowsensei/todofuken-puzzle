@@ -447,7 +447,7 @@ function makePieceSVG(p){
   if(d.furi){const f=document.createElementNS(svgNS,'text');f.setAttribute('class','pfuri');f.setAttribute('x',cx);f.setAttribute('y',cyc+fs*0.62);f.setAttribute('font-size',fs*0.5);f.textContent=p.furi;svg.appendChild(f);}
   return svg;
 }
-function buildTray(){tray.innerHTML='';state.queue.forEach(p=>{const el=document.createElement('div');el.className='piece'+(state.difficulty==='hard'?' hardpiece':'');el.dataset.romaji=p.romaji;const ch=CHARA[p.romaji];if(ch){const b=document.createElement('span');b.className='char-badge';b.textContent=ch[0];el.appendChild(b);const n=document.createElement('span');n.className='char-name';n.textContent=ch[1];el.appendChild(n);}el.appendChild(makePieceSVG(p));tray.appendChild(el);attachDrag(el,p);});}
+function buildTray(){tray.innerHTML='';state.queue.forEach(p=>{const el=document.createElement('div');el.className='piece'+(state.difficulty==='hard'?' hardpiece':'');el.dataset.romaji=p.romaji;const ch=CHARA[p.romaji];if(ch){const b=document.createElement('span');b.className='char-badge';b.textContent=ch[0];el.appendChild(b);const n=document.createElement('span');n.className='char-name';n.textContent=ch[1];el.appendChild(n);}el.appendChild(makePieceSVG(p));const cu=document.createElement('div');cu.className='piece-clue';cu.textContent=clueText(p);el.appendChild(cu);tray.appendChild(el);attachDrag(el,p);});}
 
 /* ===== リアル演出・旅アルバム ===== */
 function realInfo(p){const r=REAL[p.romaji]||['food','地域の特色を見つけよう'];const style=REAL_STYLE[r[0]]||REAL_STYLE.food;return{type:r[0],caption:style[2],text:r[1],colors:style};}
@@ -464,6 +464,15 @@ function renderAlbum(){
   albumEl.innerHTML=`<div class="album-title"><span>🧳 旅アルバム</span><span>${doneRegions.filter(Boolean).length}/${REGION_ORDER.length}</span></div><div class="album-route">${doneRegions.map(v=>`<i class="route-dot${v?' done':''}"></i>`).join('')}</div>`;
 }
 function evoLevel(p){return Math.max(1,Math.min(3,stars(p.romaji)||1));}
+/* ===== 発展度（育てる国づくり④）＋ 地理ヒント⑤ ===== */
+const EVO=JSON.parse(localStorage.getItem('tdf_evo')||'{}');
+function evo(r){return EVO[r]||0;}
+function bumpEvo(r,a){EVO[r]=Math.min(5,(EVO[r]||0)+a);localStorage.setItem('tdf_evo',JSON.stringify(EVO));}
+function totalEvo(){return PREFS.reduce((s,p)=>s+evo(p.romaji),0);}
+function evoEmoji(lv){return lv>=5?'🏙':lv>=4?'🏢':lv>=3?'🏘':lv>=2?'🏠':lv>=1?'🌱':'';}
+function addEvoIcon(p){const lv=evo(p.romaji);if(!lv)return;let t=board.querySelector('text.evo-icon[data-r="'+p.romaji+'"]');if(!t){t=document.createElementNS(svgNS,'text');t.setAttribute('class','evo-icon');t.setAttribute('data-r',p.romaji);t.setAttribute('x',p.cx);t.setAttribute('y',p.cy-Math.max(6,p.bb.height*0.16));t.setAttribute('text-anchor','middle');t.setAttribute('font-size',Math.max(9,Math.min(p.bb.width,p.bb.height)*0.42));board.querySelector('g.prefectures').appendChild(t);}t.textContent=evoEmoji(lv);}
+function clueText(p){const r=REAL[p.romaji]||['food','地域の特色'];const cap=(REAL_STYLE[r[0]]||REAL_STYLE.food)[2];const ne=(ADJ[p.romaji]||[]).slice(0,3).map(n=>{const q=PREFS.find(x=>x.romaji===n);return q?q.kanji.replace(/[都道府県]$/,''):n;});const t=ne.length?'となり '+ne.join('・')+((ADJ[p.romaji]||[]).length>3?'…':''):'海にかこまれている';return '💡 '+cap+'／'+t;}
+(function(){const s=document.createElement('style');s.textContent='.piece-clue{font-size:10px;color:#2f6da5;font-weight:700;text-align:center;margin-top:2px;line-height:1.25;}.evo-icon{paint-order:stroke;stroke:#fff;stroke-width:2px;}';document.head.appendChild(s);})();
 
 /* ===== ドラッグ＆ドロップ ===== */
 let ghost=null,dragP=null,dragEl=null,hotEl=null,magnetEl=null;
@@ -504,7 +513,7 @@ function cleanupDrag(){setMagnet(null);if(ghost){ghost.remove();ghost=null;}if(d
 /* ===== 正誤 ===== */
 function placeCorrect(p,x,y){
   const teamColor=state.mode==='group'?state.teams[state.turn].color:'#bfe3c8';
-  p.g.classList.add('done');p.g.style.fill=teamColor;p.g.style.opacity=1;addBoardLabel(p);
+  p.g.classList.add('done');p.g.style.fill=teamColor;p.g.style.opacity=1;addBoardLabel(p);bumpEvo(p.romaji,state.difficulty==='hard'?2:1);addEvoIcon(p);
   sOK();vib(40);
   if(x!=null){snapRing(x,y);confettiBurst(x,y,26);stampAt(x,y,'⭕');}
   const el=tray.querySelector(`.piece[data-romaji="${p.romaji}"]`);if(el)el.remove();
@@ -542,7 +551,7 @@ function renderZukan(){
   });
   document.getElementById('zcount').textContent=`${COLLECTED.size} / 47`;
 }
-function updateMasterPill(){document.getElementById('masterPill').textContent=`⭐ ${totalStars()} / 141`;}
+function updateMasterPill(){document.getElementById('masterPill').textContent='⭐ '+totalStars()+'/141  🏙 '+totalEvo()+'/235';}
 
 /* ===== ポップ ===== */
 let trsT=null;function showTreasure(p){const h=HOZAI[p.romaji],ch=CHARA[p.romaji]||h;if(!h)return;const ev=evoLevel(p),info=realInfo(p),rank=ev===3?'キラカード':ev===2?'名物アイテムつき':'出会いカード';treasureEl.className=`treasure real-card evo${ev}`;treasureEl.innerHTML=`<div class="titem">${ch[0]}${ev>=2?' '+h[0]:''}${ev>=3?' ✨':''}</div><div class="tname">${p.kanji} ${rank}</div><div class="cname">${ch[1]}</div><div class="ctag">${ch[2]}</div><div class="scene">${info.text}</div><div class="ttrivia">${h[1]}：${h[2]}</div>`;treasureEl.classList.add('show');clearTimeout(trsT);trsT=setTimeout(()=>treasureEl.classList.remove('show'),3200);}
@@ -578,7 +587,7 @@ function tick(){const e=document.getElementById('hTime');if(e)e.textContent=fmt(
 /* ===== 出題・開始 ===== */
 function regionList(rg){let l=state.customList?state.customList.map(byR).filter(Boolean):PREFS.filter(p=>rg==='all'?true:p.region===rg);for(let i=l.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[l[i],l[j]]=[l[j],l[i]];}return l;}
 function focusRegion(rg){if(rg==='all'){board.classList.remove('regionfocus');board.querySelectorAll('g.prefecture').forEach(g=>g.classList.remove('active'));}else{board.classList.add('regionfocus');board.querySelectorAll('g.prefecture').forEach(g=>{const p=PREFS.find(x=>x.g===g);g.classList.toggle('active',p&&p.region===rg);});}}
-function resetBoard(){board.querySelectorAll('g.prefecture').forEach(g=>{g.classList.remove('done','hot','hint','magnet');g.style.fill='';g.style.opacity='';});board.querySelectorAll('text.pref-label').forEach(t=>t.remove());}
+function resetBoard(){board.querySelectorAll('g.prefecture').forEach(g=>{g.classList.remove('done','hot','hint','magnet');g.style.fill='';g.style.opacity='';});board.querySelectorAll('text.pref-label,text.evo-icon').forEach(t=>t.remove());}
 function startRound(rg){
   state.region=rg;state.queue=regionList(rg);state.total=state.queue.length;state.placed=0;state.miss=0;state.combo=0;state.lastR=null;state.turn=0;state.owner={};
   if(state.mode==='group'){const n=state.teamCount;state.teams=TEAM_DEF.slice(0,n);state.teamScores=new Array(n).fill(0);}else state.teams=[];
@@ -613,7 +622,7 @@ function realToggle(){
 function buildMenu(){
   updateMasterPill();renderZukan();renderAlbum();updateRealScene(null);
   if(state.mode==='solo'){
-    startCard.innerHTML='<div class="medal">🧳</div><h2>個人モード：日本一周</h2><p style="font-size:13.5px;color:#41506b;">県名ピースを正しい場所へ。北→南へ旅して、ご当地お宝を集めよう。むずかしいで置けると⭐3！</p>';
+    startCard.innerHTML='<div class="medal">🧳</div><h2>個人モード：日本一周</h2><p style="font-size:13.5px;color:#41506b;">地理ヒント（地形・となり）も手がかりに正しい場所へ。置くほど県が育ち、日本が発展！むずかしい＝形だけで推理。</p>';
     const dl=document.createElement('div');dl.style.cssText='font-size:13px;color:#6b7891;margin-top:8px;';dl.textContent='難易度（むずかしい＝県名なし・形だけ）';startCard.appendChild(dl);startCard.appendChild(diffPicker());
     startCard.appendChild(realToggle());
     const pr=document.createElement('div');pr.className='pickrow';pr.style.marginTop='10px';const qb=document.createElement('button');qb.className='btn';qb.style.cssText='font-size:16px;padding:11px 22px;';qb.textContent='▶ 日本一周をはじめる';qb.onclick=()=>{state.quest=true;state.questIdx=0;state.customList=null;state.customTitle='';startRound(REGION_ORDER[0]);};pr.appendChild(qb);startCard.appendChild(pr);
